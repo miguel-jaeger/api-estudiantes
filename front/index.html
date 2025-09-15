@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Estudiantes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .form-section, .list-section {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .table-actions button {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="text-center mb-4">Gestión de Estudiantes</h1>
+
+        <div class="row mb-5">
+            <div class="col-md-8 mx-auto form-section">
+                <h2 class="mb-3 text-primary">Agregar Nuevo Estudiante</h2>
+                <form id="estudianteForm">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="apellido" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido" name="apellido" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="correo" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="correo" name="correo" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Crear Estudiante</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-10 mx-auto list-section">
+                <h2 class="mb-3 text-secondary">Lista de Estudiantes</h2>
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Apellido</th>
+                            <th scope="col">Fecha Nacimiento</th>
+                            <th scope="col">Correo</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="estudiantesTableBody">
+                        </tbody>
+                </table>
+                <p id="noDataMessage" class="text-center text-muted d-none">No hay estudiantes registrados.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editarEstudianteModal" tabindex="-1" aria-labelledby="editarEstudianteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarEstudianteModalLabel">Editar Estudiante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editarEstudianteForm">
+                        <input type="hidden" id="editIdEstudiante" name="idEstudiante">
+                        <div class="mb-3">
+                            <label for="editNombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="editNombre" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editApellido" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="editApellido" name="apellido" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="editFechaNacimiento" name="fechaNacimiento" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCorreo" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="editCorreo" name="correo" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = 'http://localhost:8081/api/estudiantes'; // Asegúrate de que esta URL sea correcta
+
+            // Inicializar el modal de Bootstrap
+            const editarEstudianteModal = new bootstrap.Modal(document.getElementById('editarEstudianteModal'));
+
+            // Función para obtener y mostrar todos los estudiantes
+            const listarEstudiantes = async () => {
+                const tableBody = document.getElementById('estudiantesTableBody');
+                const noDataMessage = document.getElementById('noDataMessage');
+                tableBody.innerHTML = ''; // Limpia la tabla
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) {
+                        // Si la respuesta no es OK, intenta leer el error
+                        const errorText = await response.text();
+                        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                    }
+                    const estudiantes = await response.json();
+                    
+                    if (estudiantes.length > 0) {
+                        noDataMessage.classList.add('d-none');
+                        estudiantes.forEach(estudiante => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${estudiante.idEstudiante}</td>
+                                <td>${estudiante.nombre}</td>
+                                <td>${estudiante.apellido}</td>
+                                <td>${estudiante.fechaNacimiento}</td>
+                                <td>${estudiante.correo}</td>
+                                <td class="text-center table-actions">
+                                    <button class="btn btn-warning btn-sm" onclick="cargarDatosEdicion(${estudiante.idEstudiante})">Editar</button>
+                                    <button class="btn btn-danger btn-sm" onclick="eliminarEstudiante(${estudiante.idEstudiante})">Eliminar</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        noDataMessage.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Error al listar estudiantes:', error);
+                    alert('Hubo un error al cargar la lista de estudiantes. Revise la consola para más detalles: ' + error.message);
+                }
+            };
+
+            // Función para crear un nuevo estudiante (POST)
+            const crearEstudiante = async (estudiante) => {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(estudiante)
+                    });
+
+                    if (response.status === 409) { // Conflicto de correo duplicado
+                        const errorMessage = await response.text();
+                        alert(`Error al crear: ${errorMessage}`);
+                    } else if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                    } else {
+                        const nuevoEstudiante = await response.json();
+                        console.log('Estudiante creado:', nuevoEstudiante);
+                        alert('Estudiante creado con éxito.');
+                        document.getElementById('estudianteForm').reset(); // Limpia el formulario
+                        listarEstudiantes(); // Actualiza la lista
+                    }
+                } catch (error) {
+                    console.error('Error al crear estudiante:', error);
+                    alert('Hubo un error al crear el estudiante. Revise la consola para más detalles: ' + error.message);
+                }
+            };
+
+            // Función para cargar los datos de un estudiante en el formulario de edición (GET by ID)
+            window.cargarDatosEdicion = async (id) => {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                    }
+                    const estudiante = await response.json();
+                    
+                    document.getElementById('editIdEstudiante').value = estudiante.idEstudiante;
+                    document.getElementById('editNombre').value = estudiante.nombre;
+                    document.getElementById('editApellido').value = estudiante.apellido;
+                    // Asegurarse de que la fechaNacimiento se formatee correctamente para el input date
+                    document.getElementById('editFechaNacimiento').value = estudiante.fechaNacimiento;
+                    document.getElementById('editCorreo').value = estudiante.correo;
+                    
+                    editarEstudianteModal.show(); // Mostrar el modal
+                } catch (error) {
+                    console.error('Error al cargar datos para edición:', error);
+                    alert('No se pudieron cargar los datos del estudiante para edición. Revise la consola para más detalles: ' + error.message);
+                }
+            };
+
+            // Función para actualizar un estudiante (PUT)
+            const actualizarEstudiante = async (id, estudiante) => {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(estudiante)
+                    });
+
+                    if (response.status === 409) { // Conflicto de correo duplicado
+                        const errorMessage = await response.text();
+                        alert(`Error al actualizar: ${errorMessage}`);
+                    } else if (response.status === 404) {
+                        alert('Error: Estudiante no encontrado para actualizar.');
+                    } else if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                    } else {
+                        const estudianteActualizado = await response.json();
+                        console.log('Estudiante actualizado:', estudianteActualizado);
+                        alert('Estudiante actualizado con éxito.');
+                        editarEstudianteModal.hide(); // Ocultar el modal
+                        listarEstudiantes(); // Actualiza la lista
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar estudiante:', error);
+                    alert('Hubo un error al actualizar el estudiante. Revise la consola para más detalles: ' + error.message);
+                }
+            };
+
+            // Función para eliminar un estudiante (DELETE)
+            window.eliminarEstudiante = async (id) => {
+                if (confirm(`¿Estás seguro de que quieres eliminar al estudiante con ID ${id}?`)) {
+                    try {
+                        const response = await fetch(`${API_URL}/${id}`, {
+                            method: 'DELETE'
+                        });
+                        if (response.status === 204) {
+                            alert('Estudiante eliminado con éxito.');
+                        } else if (response.status === 404) {
+                            alert('No se encontró el estudiante a eliminar.');
+                        } else {
+                            const errorText = await response.text();
+                            throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                        }
+                        listarEstudiantes(); // Actualiza la lista
+                    } catch (error) {
+                        console.error('Error al eliminar estudiante:', error);
+                        alert('Hubo un error al eliminar el estudiante. Revise la consola para más detalles: ' + error.message);
+                    }
+                }
+            };
+
+            // Evento para el envío del formulario de CREAR estudiante
+            document.getElementById('estudianteForm').addEventListener('submit', (event) => {
+                event.preventDefault();
+                const form = event.target;
+                const nuevoEstudiante = {
+                    nombre: form.nombre.value,
+                    apellido: form.apellido.value,
+                    fechaNacimiento: form.fechaNacimiento.value,
+                    correo: form.correo.value
+                };
+                crearEstudiante(nuevoEstudiante);
+            });
+
+            // Evento para el envío del formulario de EDITAR estudiante
+            document.getElementById('editarEstudianteForm').addEventListener('submit', (event) => {
+                event.preventDefault();
+                const form = event.target;
+                const id = document.getElementById('editIdEstudiante').value;
+                const estudianteEditado = {
+                    nombre: form.editNombre.value,
+                    apellido: form.editApellido.value,
+                    fechaNacimiento: form.editFechaNacimiento.value,
+                    correo: form.editCorreo.value
+                };
+                actualizarEstudiante(id, estudianteEditado);
+            });
+
+            // Carga inicial de la lista de estudiantes
+            listarEstudiantes();
+        });
+    </script>
+
+</body>
+</html>
