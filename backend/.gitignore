@@ -31,3 +31,58 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+### STS / Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Log files
+*.log
+logs/
+
+# Environment variables / Credentials
+.env
+env.properties
+application*.properties.local # Example for local-specific config
+application*.yml.local # Example for local-specific config
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Other temporary files
+*.tmp
+*.bak
+*~
